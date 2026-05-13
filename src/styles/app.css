@@ -34,7 +34,8 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   min-width: 0;
-  padding: var(--app-padding-y) var(--app-padding-x)
+  /* Horizontal inset lives on .page-shell so each view-stack panel (incl. incoming) matches Figma frame padding */
+  padding: var(--app-padding-y) 0
     calc(var(--screen1-padding-bottom) + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   isolation: isolate;
@@ -122,6 +123,8 @@ body {
 /* —— Page shell —— */
 .page-shell {
   min-width: 0;
+  /* Figma frame horizontal inset (16px); applies per panel during view-stack transitions */
+  padding-inline: var(--screen1-padding-x);
 }
 
 .page-shell__header {
