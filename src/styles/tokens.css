@@ -1,24 +1,120 @@
 /**
- * Design tokens — placeholder pass.
- * Replace with Figma token exports during the visual refinement milestone.
+ * Design tokens — Figma Design Tokens + Screen 1 (node 6002:631) via MCP.
+ * Global UI uses the same semantic colors where possible.
  */
 :root {
-  --color-page-bg: #f5f6f8;
+  /* Surfaces */
+  --color-page-bg: #ffffff;
   --color-surface: #ffffff;
-  --color-text: #1a1d21;
-  --color-text-muted: #5c6370;
-  --color-heading: #0d6b6b;
-  --color-link: #1a56db;
-  --color-border: #e2e5ea;
-  --color-focus: #2563eb;
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --color-surface-muted: #f6faf9;
+  --color-teal-tint: #e6f2f0;
+  --color-brand-light-screen2: #e6f2f0;
+  --color-brand-medium-border: #c3e5df;
+
+  /* Text — Figma `text/primary` + Screen 1 */
+  --color-text: #333333;
+  --color-text-secondary: #666666;
+  --color-text-secondary-screen2: #666666;
+  --color-text-muted: #6b6f76;
+  --color-text-placeholder: #8b9098;
+  --color-text-tertiary: #999999;
+
+  /* Brand — Figma `text/brand-dark` + `text/brand-med` */
+  --color-heading: #2d8072;
+  --color-heading-soft: #3aa694;
+  --color-teal: #1b4d43;
+  --color-teal-border: #2f7a6c;
+  /* Figma `link` */
+  --color-link: #3a70a6;
+  --color-link-hover: #2f5d8a;
+
+  /* Borders & dividers */
+  --color-border: #dddddd;
+  --color-border-subtle: #e8eaeb;
+  --color-divider: #dddddd;
+  --color-divider-card-title: #999999;
+
+  /* Controls */
+  --color-focus: #3a70a6;
+  --color-warn-fill: #d94800;
+
+  /* Typography — Figma: Instrument Sans (page title), Inter (UI) */
+  --font-instrument: "Instrument Sans", system-ui, sans-serif;
+  --font-inter: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-inter);
+
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.8125rem;
+  --font-size-body: 0.9375rem;
+  --font-size-md: 1rem;
+  /* Figma Screen 1 body / links */
+  --font-size-screen1-body: 1rem;
+  /* Figma subhead (team names) */
+  --font-size-screen1-subhead: 1.125rem;
+  /* Figma page title */
+  --font-size-screen1-title: 1.5rem;
+  --font-size-screen2-team: 1.375rem;
+  --font-size-screen2-btn: 0.875rem;
+  --font-size-title: 1.25rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-tight: 1.35;
+  --line-body: 1.45;
+  --line-screen1: 1;
+
+  /* Spacing */
   --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --shadow-panel: 0 -4px 24px rgba(0, 0, 0, 0.08);
+  --space-2: 0.375rem;
+  --space-3: 0.5rem;
+  --space-4: 0.625rem;
+  --space-5: 0.75rem;
+  --space-6: 1rem;
+  --space-7: 1.25rem;
+  --space-8: 1.5rem;
+  --space-9: 2rem;
+  --space-10: 2.5rem;
+
+  /* Figma Screen 1 frame */
+  --screen1-frame-width: 390px;
+  --screen1-content-width: 358px;
+  --screen1-padding-x: 16px;
+  --screen1-padding-top: 48px;
+  --screen1-padding-bottom: 12px;
+  --screen1-gap-title-list: 16px;
+  --screen2-section-gap: 16px;
+  --screen2-card-outer-y: 8px;
+  --screen2-meta-gap: 8px;
+  --screen2-meta-padding-top: 4px;
+  --screen2-meta-padding-bottom: 12px;
+  --screen2-action-padding-y: 8px;
+  --screen2-btn-padding-y: 8px;
+  --screen2-btn-padding-x: 16px;
+  /* Figma Screen 2 / Routing drawer (6010:915) */
+  --routing-drawer-padding-top: 16px;
+  --routing-drawer-padding-x: 16px;
+  --routing-drawer-padding-bottom: 72px;
+  --routing-drawer-radius-top: 16px;
+  --routing-drawer-max-width: 390px;
+  --routing-drawer-content-width: 358px;
+  --routing-chip-radius: 2px;
+  --routing-chip-gap: 8px;
+  --routing-drawer-section-gap: 16px;
+  --screen1-gap-cards: 32px;
+  --screen1-gap-card-inner: 12px;
+  --screen1-gap-title-block: 4px;
+  --screen1-card-title-padding-bottom: 8px;
+  --screen1-warn-gap: 4px;
+
+  /* Layout shell */
+  --app-max-width: var(--screen1-frame-width);
+  --app-padding-x: var(--screen1-padding-x);
+  --app-padding-y: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+
+  --shadow-panel: 0 -6px 28px rgba(0, 0, 0, 0.08);
 }

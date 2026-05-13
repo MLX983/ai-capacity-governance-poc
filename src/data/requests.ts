@@ -10,6 +10,13 @@ export type RevisionOption = "narrow-scope" | "split-tasks";
 
 export type RequestStatus = "queued" | "approved" | "sent-back";
 
+/** Figma Screen 3 expanded — extra rows under Request Summary before “View less” */
+export interface PremiumExpandedDetails {
+  businessPriority: string;
+  estimatedUsage: string;
+  whyThisRoute: string;
+}
+
 export interface FlaggedRequest {
   id: string;
   teamId: string;
@@ -25,15 +32,32 @@ export interface FlaggedRequest {
   flagReason: string;
   rationaleShort: string;
   rationaleExpanded: string;
+  /** Figma Screen 3 — Request summary (optional; falls back to rationale fields) */
+  premiumPurpose?: string;
+  premiumScope?: string;
+  premiumDueDate?: string;
+  /** Figma Screen 3 — three lines under “Why Flagged” */
+  premiumWhyLines?: readonly [string, string, string];
+  /** Second line in “Suggested route” card, e.g. “Lower-cost: Standard model first” */
+  premiumLowerCostLine?: string;
+  /** Figma Screen 3 expanded — three labeled paragraphs under the summary block */
+  premiumExpandedDetails?: PremiumExpandedDetails;
+  /** Figma Screen 2 — card 1 uses “Selected route”; default “Recommended route” */
+  screen2RouteHeading?: "selected" | "recommended";
 }
 
 export interface TeamCapacity {
   id: string;
   name: string;
-  weeklyAllocationLabel: string;
-  /** 0–100+ for “above allocation” story */
+  /** Optional; omitted on Figma Screen 1 */
+  weeklyAllocationLabel?: string;
+  /** 0–100+ — Screen 1 shows whole-number usage */
   usedPercent: number;
   trendLabel: string;
+  /** Figma: WarningDiamond + semibold on the Usage line */
+  usageWarning?: boolean;
+  /** Figma: WarningDiamond + semibold on the Trend line */
+  trendWarning?: boolean;
 }
 
 export const ROUTE_LABELS: Record<RouteOption, string> = {
@@ -49,37 +73,221 @@ export const REVISION_LABELS: Record<RevisionOption, string> = {
   "split-tasks": "Split into smaller tasks",
 };
 
+/** Figma Screen 1 — “AI Capacity by Team” (node 6002:631) */
 export const INITIAL_TEAMS: TeamCapacity[] = [
   {
     id: "sales-ops",
     name: "Sales Operations",
-    weeklyAllocationLabel: "120k equiv. tokens / week",
-    usedPercent: 118,
-    trendLabel: "Above 4-week trend",
+    usedPercent: 92,
+    trendLabel: "Above weekly allocation",
+    usageWarning: true,
   },
   {
-    id: "finance",
-    name: "Finance",
-    weeklyAllocationLabel: "80k equiv. tokens / week",
-    usedPercent: 62,
-    trendLabel: "Within trend",
+    id: "risk-review",
+    name: "Risk Review",
+    usedPercent: 61,
+    trendLabel: "Normal",
   },
   {
-    id: "product",
-    name: "Product",
-    weeklyAllocationLabel: "95k equiv. tokens / week",
-    usedPercent: 71,
-    trendLabel: "Within trend",
+    id: "customer-support",
+    name: "Customer Support",
+    usedPercent: 78,
+    trendLabel: "Spike detected",
+    trendWarning: true,
   },
 ];
 
-export const INITIAL_REQUESTS: FlaggedRequest[] = [
+function teamQueueRequest(
+  id: string,
+  teamId: string,
+  title: string,
+  requestor: string,
+  estimatedUseLabel: string,
+  route: RouteOption,
+  overrides?: Partial<FlaggedRequest>,
+): FlaggedRequest {
+  return {
+    id,
+    teamId,
+    title,
+    requestor,
+    estimatedUseLabel,
+    recommendedRoute: route,
+    selectedRoute: route,
+    requiresPremiumReview: false,
+    status: "queued",
+    flagReason: "Queued for governance review.",
+    rationaleShort: "Synthetic copy for the POC queue.",
+    rationaleExpanded: "Replace with policy-backed text when extending the POC.",
+    ...overrides,
+  };
+}
+
+/** Figma Screen 2 — Risk Review queue (titles are scenario-specific, not stubs) */
+const RISK_REVIEW_REQUESTS: FlaggedRequest[] = [
+  teamQueueRequest(
+    "rr-01",
+    "risk-review",
+    "Model output attribution mismatch",
+    "Risk Analytics",
+    "High",
+    "standard-model",
+  ),
+  teamQueueRequest(
+    "rr-02",
+    "risk-review",
+    "Regulatory disclosure draft review",
+    "Compliance",
+    "Medium",
+    "summarize-first",
+  ),
+  teamQueueRequest(
+    "rr-03",
+    "risk-review",
+    "Escalated exception — vendor model change",
+    "Third-Party Risk",
+    "High",
+    "premium-model",
+    { requiresPremiumReview: true },
+  ),
+];
+
+/** Figma Screen 2 — Customer Support queue */
+const CUSTOMER_SUPPORT_REQUESTS: FlaggedRequest[] = [
+  teamQueueRequest(
+    "cs-01",
+    "customer-support",
+    "Ticket thread summarization — billing",
+    "Support Tier 2",
+    "Medium",
+    "standard-model",
+  ),
+  teamQueueRequest(
+    "cs-02",
+    "customer-support",
+    "Refund eligibility summary",
+    "Billing Support",
+    "Low",
+    "small-model",
+  ),
+  teamQueueRequest(
+    "cs-03",
+    "customer-support",
+    "SLA breach response draft",
+    "Enterprise Support",
+    "High",
+    "standard-model",
+  ),
+  teamQueueRequest(
+    "cs-04",
+    "customer-support",
+    "Knowledge-base gap analysis",
+    "Content Ops",
+    "Medium",
+    "summarize-first",
+  ),
+  teamQueueRequest(
+    "cs-05",
+    "customer-support",
+    "Escalated tone review (enterprise)",
+    "Support Lead",
+    "High",
+    "premium-model",
+    { requiresPremiumReview: true },
+  ),
+  teamQueueRequest(
+    "cs-06",
+    "customer-support",
+    "Multi-ticket incident rollup",
+    "Incident Command",
+    "High",
+    "standard-model",
+  ),
+  teamQueueRequest(
+    "cs-07",
+    "customer-support",
+    "Product return policy Q&A pack",
+    "Retail Support",
+    "Medium",
+    "small-model",
+  ),
+  teamQueueRequest(
+    "cs-08",
+    "customer-support",
+    "Chat transcript cleanup (PII)",
+    "Trust & Safety",
+    "High",
+    "standard-model",
+  ),
+  teamQueueRequest(
+    "cs-09",
+    "customer-support",
+    "CSAT dip diagnostic summary",
+    "Voice of Customer",
+    "Medium",
+    "summarize-first",
+  ),
+  teamQueueRequest(
+    "cs-10",
+    "customer-support",
+    "Onboarding email refresh variants",
+    "Lifecycle Support",
+    "Low",
+    "small-model",
+  ),
+  teamQueueRequest(
+    "cs-11",
+    "customer-support",
+    "Seasonal surge forecast note",
+    "Workforce Planning",
+    "Medium",
+    "overnight-batch",
+  ),
+  teamQueueRequest(
+    "cs-12",
+    "customer-support",
+    "Partner portal error triage digest",
+    "Partner Support",
+    "Medium",
+    "standard-model",
+  ),
+];
+
+const SALES_OPS_REQUESTS: FlaggedRequest[] = [
+  {
+    id: "req-s2-01",
+    teamId: "sales-ops",
+    title: "Detailed outreach report",
+    requestor: "Sales Strategy",
+    estimatedUseLabel: "High",
+    recommendedRoute: "overnight-batch",
+    selectedRoute: "overnight-batch",
+    requiresPremiumReview: false,
+    status: "queued",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
+  },
+  {
+    id: "req-s2-02",
+    teamId: "sales-ops",
+    title: "Client follow-up summary",
+    requestor: "Regional Sales",
+    estimatedUseLabel: "Medium",
+    recommendedRoute: "standard-model",
+    selectedRoute: "standard-model",
+    requiresPremiumReview: false,
+    status: "queued",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
+  },
   {
     id: "req-2041",
     teamId: "sales-ops",
     title: "Executive pipeline briefing",
-    requestor: "Jordan Lee",
-    estimatedUseLabel: "~$22 · 2.8M tokens",
+    requestor: "Sales Leadership",
+    estimatedUseLabel: "High",
     recommendedRoute: "premium-model",
     selectedRoute: "premium-model",
     requiresPremiumReview: true,
@@ -89,28 +297,74 @@ export const INITIAL_REQUESTS: FlaggedRequest[] = [
       "Cross-region roll-up with exec narrative; policy recommends premium for board-facing summaries under pressure.",
     rationaleExpanded:
       "Source spans CRM, CPQ, and a manual forecast workbook. Standard summarization has missed edge cases on commit timing in prior cycles; premium path preserves numeric parity with finance sign-off.",
+    premiumPurpose:
+      "Create a concise executive summary of pipeline health, momentum, and risk areas for the weekly leadership meeting.",
+    premiumScope:
+      "Sales pipeline data across 4 regions, covering 200 open opportunities over the last 90 days.",
+    premiumDueDate: "Today, 4 PM",
+    premiumWhyLines: [
+      "Premium model recommended",
+      "High estimated usage",
+      "Team usage already above trend",
+    ],
+    premiumLowerCostLine: "Lower-cost: Standard model first",
+    premiumExpandedDetails: {
+      businessPriority:
+        "High: Supports the weekly leadership review and near-term forecast discussion.",
+      estimatedUsage:
+        "High: Requires cross-region comparison, trend synthesis, and executive-ready summarization across a broad dataset.",
+      whyThisRoute:
+        "This request spans multiple regions and a long time range, and the output needs to be concise and presentation-ready. A premium model is recommended for stronger synthesis and cleaner narrative quality. A standard model can be used first if the team wants a lower-cost draft before expanding.",
+    },
   },
   {
-    id: "req-2038",
+    id: "req-s2-04",
     teamId: "sales-ops",
-    title: "Draft outreach variants for enterprise pilot list",
-    requestor: "Sam Rivera",
-    estimatedUseLabel: "~$6 · 900k tokens",
+    title: "Regional pipeline rollup",
+    requestor: "Sales Planning",
+    estimatedUseLabel: "Medium",
     recommendedRoute: "standard-model",
     selectedRoute: "standard-model",
     requiresPremiumReview: false,
     status: "queued",
-    flagReason: "Request volume spike vs. team baseline.",
-    rationaleShort: "Batch job pattern fits standard routing after light trimming.",
-    rationaleExpanded:
-      "List is 4k contacts; model can chunk by segment. Overnight batch is viable if same-day send is not required.",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
+  },
+  {
+    id: "req-s2-05",
+    teamId: "sales-ops",
+    title: "Win/loss theme analysis",
+    requestor: "Revenue Operations",
+    estimatedUseLabel: "High",
+    recommendedRoute: "summarize-first",
+    selectedRoute: "summarize-first",
+    requiresPremiumReview: false,
+    status: "queued",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
+  },
+  {
+    id: "req-s2-06",
+    teamId: "sales-ops",
+    title: "Territory activity digest",
+    requestor: "Regional Sales",
+    estimatedUseLabel: "Low",
+    recommendedRoute: "small-model",
+    selectedRoute: "small-model",
+    requiresPremiumReview: false,
+    status: "queued",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
   },
   {
     id: "req-2035",
     teamId: "sales-ops",
     title: "QBR prep pack",
-    requestor: "Alex Chen",
-    estimatedUseLabel: "~$16 · 2.1M tokens",
+    requestor: "Sales Leadership",
+    estimatedUseLabel: "High",
     recommendedRoute: "premium-model",
     selectedRoute: "premium-model",
     requiresPremiumReview: true,
@@ -120,82 +374,46 @@ export const INITIAL_REQUESTS: FlaggedRequest[] = [
       "Multi-stakeholder QBR storyline with customer evidence pulls; premium flagged for accuracy and tone control.",
     rationaleExpanded:
       "Notes and slides reference draft numbers still under review. A cheaper route risks stale figures in customer-facing excerpts; premium review gates publish until leadership confirms the final set.",
+    premiumPurpose:
+      "Produce leadership-ready QBR slides and narrative from approved draft metrics and customer call excerpts.",
+    premiumScope:
+      "Current-quarter pipeline, win/loss themes, and customer references across three regions.",
+    premiumDueDate: "Tomorrow, 9 AM",
+    premiumWhyLines: [
+      "Premium model recommended",
+      "High estimated usage",
+      "Team usage already above trend",
+    ],
+    premiumLowerCostLine: "Lower-cost: Summarize first, then standard model",
+    premiumExpandedDetails: {
+      businessPriority:
+        "High: QBR materials must align with approved metrics and leadership messaging before customer touchpoints.",
+      estimatedUsage:
+        "High: Weaves pipeline themes, win/loss patterns, and call excerpts into a single leadership-ready storyline.",
+      whyThisRoute:
+        "Draft figures and qualitative evidence sit together where accuracy and tone matter for excerpts that may reach customers. Premium improves coherence and reduces the risk of stale numbers. Summarize-first or standard paths work if the team accepts a thinner first pass before polish.",
+    },
   },
   {
-    id: "req-2032",
+    id: "req-s2-08",
     teamId: "sales-ops",
-    title: "Competitive battlecards refresh (5 segments)",
-    requestor: "Morgan Patel",
-    estimatedUseLabel: "~$9 · 1.1M tokens",
-    recommendedRoute: "overnight-batch",
-    selectedRoute: "overnight-batch",
-    requiresPremiumReview: false,
-    status: "queued",
-    flagReason: "Non-urgent content refresh flagged under capacity pressure.",
-    rationaleShort: "No SLA today; batch defers load off peak hours.",
-    rationaleExpanded:
-      "Stakeholder deadline is end of week; overnight batch meets that with lower peak concurrency.",
-  },
-  {
-    id: "req-2029",
-    teamId: "sales-ops",
-    title: "Inbound lead scoring explanation snippets",
-    requestor: "Riley Kim",
-    estimatedUseLabel: "~$4 · 600k tokens",
-    recommendedRoute: "small-model",
-    selectedRoute: "small-model",
-    requiresPremiumReview: false,
-    status: "queued",
-    flagReason: "Cluster of similar requests in one afternoon.",
-    rationaleShort: "Short explanations; small model is policy-default here.",
-    rationaleExpanded:
-      "Outputs are templated one-liners with citations to static policy text.",
-  },
-  {
-    id: "req-2026",
-    teamId: "sales-ops",
-    title: "Pipeline stage definitions — natural language to rules",
-    requestor: "Taylor Brooks",
-    estimatedUseLabel: "~$7 · 1.0M tokens",
+    title: "CRM note cleanup",
+    requestor: "Sales Operations",
+    estimatedUseLabel: "Medium",
     recommendedRoute: "standard-model",
     selectedRoute: "standard-model",
     requiresPremiumReview: false,
     status: "queued",
-    flagReason: "Elevated concurrency vs. rolling average.",
-    rationaleShort: "Standard model sufficient for rule-like transformations.",
-    rationaleExpanded:
-      "Inputs are short paragraphs per stage; no long-context dependency.",
+    flagReason: "Screen 2 reference row.",
+    rationaleShort: "Synthetic copy aligned to Figma.",
+    rationaleExpanded: "Extend with real policy text as needed.",
   },
-  {
-    id: "req-2023",
-    teamId: "sales-ops",
-    title: "Quote configuration sanity check (bulk SKUs)",
-    requestor: "Casey Nguyen",
-    estimatedUseLabel: "~$8 · 1.3M tokens",
-    recommendedRoute: "overnight-batch",
-    selectedRoute: "overnight-batch",
-    requiresPremiumReview: false,
-    status: "queued",
-    flagReason: "Bulk job while team is near capacity.",
-    rationaleShort: "Overnight batch spreads load and preserves SLA buffer.",
-    rationaleExpanded:
-      "Results feed a weekly batch export; intraday completion is not required.",
-  },
-  {
-    id: "req-2020",
-    teamId: "sales-ops",
-    title: "Partner enablement one-pagers (localized)",
-    requestor: "Jamie Ortiz",
-    estimatedUseLabel: "~$5 · 750k tokens",
-    recommendedRoute: "summarize-first",
-    selectedRoute: "summarize-first",
-    requiresPremiumReview: false,
-    status: "queued",
-    flagReason: "Localization adds token multiplier vs. baseline.",
-    rationaleShort: "Summarize source English before localized expansion.",
-    rationaleExpanded:
-      "Style guide allows condensed source; expansion per locale stays smaller.",
-  },
+];
+
+export const INITIAL_REQUESTS: FlaggedRequest[] = [
+  ...SALES_OPS_REQUESTS,
+  ...RISK_REVIEW_REQUESTS,
+  ...CUSTOMER_SUPPORT_REQUESTS,
 ];
 
 export function queuedRequestsForTeam(

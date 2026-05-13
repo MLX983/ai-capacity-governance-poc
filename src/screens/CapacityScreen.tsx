@@ -5,28 +5,30 @@ import { queuedRequestsForTeam } from "../data/requests";
 interface CapacityScreenProps {
   teams: TeamCapacity[];
   requests: FlaggedRequest[];
+  /** Only this team’s “Review flagged” control is clickable (Screenshots PDF) */
+  interactiveTeamId: string;
   onNavigateToFlagged: (teamId: string) => void;
 }
 
 export function CapacityScreen({
   teams,
   requests,
+  interactiveTeamId,
   onNavigateToFlagged,
 }: CapacityScreenProps) {
   return (
-    <div className="stack">
-      <p className="lede">
-        Weekly allocations and teams under capacity pressure. Open flagged
-        queues to review routing before additional compute is used.
-      </p>
-      <ul className="card-list">
+    <div className="capacity-screen">
+      <ul className="card-list card-list--capacity">
         {teams.map((team) => {
           const count = queuedRequestsForTeam(requests, team.id).length;
+          const linkEnabled =
+            team.id === interactiveTeamId && count > 0;
           return (
             <li key={team.id}>
               <CapacityCard
                 team={team}
                 flaggedCount={count}
+                reviewLinkEnabled={linkEnabled}
                 onReviewFlagged={
                   count > 0 ? () => onNavigateToFlagged(team.id) : undefined
                 }
