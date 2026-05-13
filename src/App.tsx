@@ -135,7 +135,7 @@ function App() {
 
     if (n.screen === "capacity") {
       return (
-        <PageShell variant="capacity" title="AI Capacity by Team">
+        <PageShell variant="capacity" title="AI Capacity Review">
           <CapacityScreen
             teams={INITIAL_TEAMS}
             requests={requests}
