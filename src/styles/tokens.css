@@ -36,7 +36,7 @@
 
   /* Controls */
   --color-focus: #3a70a6;
-  --color-warn-fill: #d94800;
+  --color-warn-fill: #cc5500;
 
   /* Typography — Figma: Instrument Sans (page title), Inter (UI) */
   --font-instrument: "Instrument Sans", system-ui, sans-serif;
@@ -77,11 +77,11 @@
   --space-9: 2rem;
   --space-10: 2.5rem;
 
-  /* Figma Screen 1 frame */
-  --screen1-frame-width: 390px;
-  --screen1-content-width: 358px;
+  /* Layout shell — fluid on mobile/iframe widths, capped on wider previews */
+  --screen1-frame-width: 430px;
+  --screen1-content-width: 100%;
   --screen1-padding-x: 16px;
-  --screen1-padding-top: 48px;
+  --screen1-padding-top: 32px;
   --screen1-padding-bottom: 12px;
   --screen1-gap-title-list: 16px;
   --screen2-section-gap: 16px;
@@ -97,8 +97,8 @@
   --routing-drawer-padding-x: 16px;
   --routing-drawer-padding-bottom: 72px;
   --routing-drawer-radius-top: 16px;
-  --routing-drawer-max-width: 390px;
-  --routing-drawer-content-width: 358px;
+  --routing-drawer-max-width: var(--screen1-frame-width);
+  --routing-drawer-content-width: 100%;
   --routing-chip-radius: 2px;
   --routing-chip-gap: 8px;
   --routing-drawer-section-gap: 16px;
