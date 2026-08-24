@@ -637,6 +637,8 @@ body {
 .text-link:focus-visible,
 .premium-screen__view-more:focus-visible,
 .routing-chip:focus-visible,
+.routing-choice-list__save:focus-visible,
+.routing-choice-list__cancel:focus-visible,
 .page-shell__back-icon:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
@@ -865,6 +867,134 @@ body {
 .routing-panel__close.routing-panel__close--drawer:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+}
+
+/* —— Routing radios + Save/Cancel (Figma 6115:734 / 6014:1271) —— */
+.routing-choice-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--routing-drawer-section-gap);
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.routing-choice-list__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--routing-drawer-section-gap);
+  width: 100%;
+}
+
+.routing-choice-list__group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--routing-radio-row-gap);
+  width: 100%;
+}
+
+.routing-choice-list__heading {
+  margin: 0;
+  width: 100%;
+  font-family: var(--font-inter);
+  font-size: var(--font-size-screen1-subhead);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-screen1);
+  color: var(--color-text-secondary-screen2);
+}
+
+.routing-radio {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--routing-radio-label-gap);
+  width: 100%;
+  margin: 0;
+  cursor: pointer;
+}
+
+.routing-radio.poc-action-guard {
+  cursor: default;
+}
+
+.routing-radio__input {
+  position: absolute;
+  left: 0;
+  width: var(--routing-radio-size);
+  height: var(--routing-radio-size);
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.routing-radio__control {
+  box-sizing: border-box;
+  width: var(--routing-radio-size);
+  height: var(--routing-radio-size);
+  flex-shrink: 0;
+  border: 2px solid var(--color-text-tertiary);
+  border-radius: 50%;
+  background: var(--color-surface);
+  pointer-events: none;
+}
+
+.routing-radio__input:checked + .routing-radio__control::after {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  margin: 4px;
+  border-radius: 50%;
+  background: var(--color-heading);
+}
+
+.routing-radio__input:focus-visible + .routing-radio__control {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.routing-radio__label {
+  font-family: var(--font-inter);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-screen1);
+  color: var(--color-text);
+}
+
+.routing-choice-list__actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--routing-choice-action-gap);
+}
+
+.routing-choice-list__save,
+.routing-choice-list__cancel {
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: var(--screen2-btn-padding-y) var(--screen2-btn-padding-x);
+  line-height: var(--line-screen1);
+  font-family: var(--font-inter);
+  font-size: var(--font-size-screen2-btn);
+  color: var(--color-heading-soft);
+  border: 1px solid var(--color-brand-medium-border);
+}
+
+.routing-choice-list__save {
+  background: var(--color-brand-light-screen2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.routing-choice-list__cancel {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-normal);
 }
 
 /* —— Premium review — Screen 3 / Collapsed (Figma 6014:1271) —— */

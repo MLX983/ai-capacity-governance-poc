@@ -23,8 +23,6 @@ interface FlaggedRequestsScreenProps {
   teamId: string;
   requests: FlaggedRequest[];
   editingRequestId: string | null;
-  /** Increment to run the same exit animation as the demo top card for the executive briefing row */
-  exitExecutiveBriefingSignal?: number;
   onOpenEdit: (requestId: string) => void;
   onCloseEdit: () => void;
   onSelectRoute: (requestId: string, route: RouteOption) => void;
@@ -48,26 +46,21 @@ function interactionForRequest(
   );
 
   if (request.id === SALES_OPS_SCREEN2_DEMO_CARD_ID) {
-    const initial =
-      request.recommendedRoute === "overnight-batch" &&
-      request.selectedRoute === "overnight-batch" &&
-      request.screen2RouteHeading !== "selected";
     const afterRouteChange =
       request.screen2RouteHeading === "selected" &&
       request.selectedRoute === "small-model";
     return {
-      edit: initial,
+      edit: true,
       approve: afterRouteChange,
       premium: false,
     };
   }
 
-  if (
-    request.id === SALES_OPS_EXECUTIVE_BRIEFING_ID &&
-    request.requiresPremiumReview &&
-    !demoTopStillQueued
-  ) {
-    return { edit: false, approve: false, premium: true };
+  if (request.id === SALES_OPS_EXECUTIVE_BRIEFING_ID && !demoTopStillQueued) {
+    if (request.requiresPremiumReview) {
+      return { edit: false, approve: false, premium: true };
+    }
+    return { edit: true, approve: true, premium: false };
   }
 
   return { edit: false, approve: false, premium: false };
@@ -87,7 +80,6 @@ export function FlaggedRequestsScreen({
   teamId,
   requests,
   editingRequestId,
-  exitExecutiveBriefingSignal = 0,
   onOpenEdit,
   onCloseEdit,
   onSelectRoute,
@@ -105,7 +97,6 @@ export function FlaggedRequestsScreen({
   const [fadingId, setFadingId] = useState<string | null>(null);
   const [listFlipClipActive, setListFlipClipActive] = useState(false);
   const removeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastExecutiveExitSignal = useRef(0);
 
   const listUlRef = useRef<HTMLUListElement | null>(null);
   const flipNonceRef = useRef(0);
@@ -227,20 +218,6 @@ export function FlaggedRequestsScreen({
     };
   }, [clearRemoveTimer, clearFlipTimers]);
 
-  useEffect(() => {
-    if (exitExecutiveBriefingSignal === 0) {
-      lastExecutiveExitSignal.current = 0;
-    }
-  }, [exitExecutiveBriefingSignal]);
-
-  useEffect(() => {
-    if (exitExecutiveBriefingSignal <= lastExecutiveExitSignal.current) return;
-    const queued = queuedRequestsForTeam(requests, teamId);
-    if (!queued.some((r) => r.id === SALES_OPS_EXECUTIVE_BRIEFING_ID)) return;
-    lastExecutiveExitSignal.current = exitExecutiveBriefingSignal;
-    scheduleApproveExit(SALES_OPS_EXECUTIVE_BRIEFING_ID);
-  }, [exitExecutiveBriefingSignal, requests, teamId, scheduleApproveExit]);
-
   function closeDrawerAnimated() {
     setDrawerClosing(true);
     window.setTimeout(() => {
@@ -296,6 +273,7 @@ export function FlaggedRequestsScreen({
       )}
       {editing ? (
         <RoutingPanel
+          key={editing.id}
           overlayPhase={drawerClosing ? "closing" : "open"}
           request={editing}
           onClose={closeDrawerAnimated}

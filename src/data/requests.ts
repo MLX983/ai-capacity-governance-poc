@@ -25,8 +25,13 @@ export interface FlaggedRequest {
   /** Human-readable estimate for demo purposes */
   estimatedUseLabel: string;
   recommendedRoute: RouteOption;
-  /** Current working selection; defaults to recommended until reviewer edits */
+  /** Saved routing decision. Pending radio UI does not write this until Save. */
   selectedRoute: RouteOption;
+  /**
+   * When true, the list shows “Review premium route” instead of Approve/Edit.
+   * Cleared after a route is saved from that review; the request stays queued
+   * until an explicit Approve (or send-back).
+   */
   requiresPremiumReview: boolean;
   status: RequestStatus;
   flagReason: string;

@@ -1,24 +1,10 @@
 import { useMemo, useState } from "react";
-import type { FlaggedRequest, RevisionOption, RouteOption } from "../data/requests";
-import { REVISION_LABELS, ROUTE_LABELS } from "../data/requests";
-
-const ROUTE_OPTIONS: RouteOption[] = [
-  "small-model",
-  "standard-model",
-  "premium-model",
-  "summarize-first",
-  "overnight-batch",
-];
-
-const PANEL_ROUTE_LABELS: Record<RouteOption, string> = {
-  "small-model": "Route to small model",
-  "standard-model": "Route to standard model",
-  "premium-model": "Route to premium model",
-  "summarize-first": "Summarize first",
-  "overnight-batch": "Run overnight batch",
-};
-
-const REVISION_OPTIONS: RevisionOption[] = ["narrow-scope", "split-tasks"];
+import type { FlaggedRequest } from "../data/requests";
+import { ROUTE_LABELS } from "../data/requests";
+import {
+  RoutingChoiceList,
+  type RoutingChoice,
+} from "../components/RoutingChoiceList";
 
 function whyLinesFor(request: FlaggedRequest): readonly [string, string, string] {
   if (request.premiumWhyLines) {
@@ -35,28 +21,22 @@ function whyLinesFor(request: FlaggedRequest): readonly [string, string, string]
 
 interface PremiumReviewScreenProps {
   request: FlaggedRequest;
-  /** When false, “Request revision” chips are non-interactive (POC / PDF) */
+  /** When false, “Request revision” radios are non-interactive (POC / PDF) */
   revisionActionsEnabled?: boolean;
-  /** Guided POC: only this route chip is clickable; others look normal */
-  demoOnlyRouteOption?: RouteOption;
-  onSelectRoute: (route: RouteOption) => void;
-  onSendBack: (revision: RevisionOption) => void;
-  /**
-   * When the “Route to premium model” chip is already selected, a click runs this
-   * (slide back to queue + remove briefing card) instead of a no-op.
-   */
-  onConfirmPremiumRoute?: () => void;
+  onSave: (choice: RoutingChoice) => void;
+  onCancel: () => void;
 }
 
 export function PremiumReviewScreen({
   request,
   revisionActionsEnabled = true,
-  demoOnlyRouteOption,
-  onSelectRoute,
-  onSendBack,
-  onConfirmPremiumRoute,
+  onSave,
+  onCancel,
 }: PremiumReviewScreenProps) {
   const [expanded, setExpanded] = useState(false);
+  const [pendingChoice, setPendingChoice] = useState<RoutingChoice | null>(
+    null,
+  );
 
   const purpose = request.premiumPurpose ?? request.rationaleShort;
   const scope = request.premiumScope ?? request.flagReason;
@@ -85,6 +65,14 @@ export function PremiumReviewScreen({
     ) : (
       <p className="premium-screen__expanded">{request.rationaleExpanded}</p>
     );
+
+  function commitPending() {
+    if (pendingChoice == null) {
+      onCancel();
+      return;
+    }
+    onSave(pendingChoice);
+  }
 
   return (
     <div className="premium-screen">
@@ -154,75 +142,18 @@ export function PremiumReviewScreen({
           </p>
         </section>
 
-        <section className="premium-screen__section" aria-labelledby="premium-routing-heading">
-          <h3 id="premium-routing-heading" className="premium-screen__group-label">
-            Routing options
-          </h3>
-          <ul className="routing-chip-list">
-            {ROUTE_OPTIONS.map((opt) => {
-              const routeLocked =
-                demoOnlyRouteOption != null && opt !== demoOnlyRouteOption;
-              return (
-                <li key={opt}>
-                  <button
-                    type="button"
-                    className={
-                      routeLocked
-                        ? request.selectedRoute === opt
-                          ? "routing-chip routing-chip--selected poc-action-guard"
-                          : "routing-chip poc-action-guard"
-                        : request.selectedRoute === opt
-                          ? "routing-chip routing-chip--selected"
-                          : "routing-chip"
-                    }
-                    aria-disabled={routeLocked || undefined}
-                    tabIndex={routeLocked ? -1 : undefined}
-                    onClick={() => {
-                      if (routeLocked) return;
-                      if (
-                        opt === "premium-model" &&
-                        request.selectedRoute === "premium-model"
-                      ) {
-                        onConfirmPremiumRoute?.();
-                        return;
-                      }
-                      onSelectRoute(opt);
-                    }}
-                  >
-                    {PANEL_ROUTE_LABELS[opt]}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-
-        <section className="premium-screen__section" aria-labelledby="premium-revision-heading">
-          <h3 id="premium-revision-heading" className="premium-screen__group-label">
-            Request revision
-          </h3>
-          <ul className="routing-chip-list">
-            {REVISION_OPTIONS.map((opt) => (
-              <li key={opt}>
-                <button
-                  type="button"
-                  className={
-                    revisionActionsEnabled
-                      ? "routing-chip routing-chip--revision"
-                      : "routing-chip routing-chip--revision poc-action-guard"
-                  }
-                  aria-disabled={!revisionActionsEnabled}
-                  tabIndex={revisionActionsEnabled ? undefined : -1}
-                  onClick={() => {
-                    if (!revisionActionsEnabled) return;
-                    onSendBack(opt);
-                  }}
-                >
-                  {REVISION_LABELS[opt]}
-                </button>
-              </li>
-            ))}
-          </ul>
+        <section
+          className="premium-screen__section premium-screen__section--routing"
+          aria-label="Routing decision"
+        >
+          <RoutingChoiceList
+            name="premium-routing"
+            value={pendingChoice}
+            onChange={setPendingChoice}
+            onSave={commitPending}
+            onCancel={onCancel}
+            revisionEnabled={revisionActionsEnabled}
+          />
         </section>
       </div>
     </div>

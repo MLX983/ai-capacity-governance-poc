@@ -1,34 +1,20 @@
+import { useState } from "react";
 import type { FlaggedRequest, RevisionOption, RouteOption } from "../data/requests";
-import { REVISION_LABELS } from "../data/requests";
 import { CloseXSquareIcon } from "./CloseXSquareIcon";
-
-const ROUTE_OPTIONS: RouteOption[] = [
-  "small-model",
-  "standard-model",
-  "premium-model",
-  "summarize-first",
-  "overnight-batch",
-];
-
-const REVISION_OPTIONS: RevisionOption[] = ["narrow-scope", "split-tasks"];
-
-/** Figma Screen 2 / Routing drawer (node 6010:915) */
-const PANEL_ROUTE_LABELS: Record<RouteOption, string> = {
-  "small-model": "Route to small model",
-  "standard-model": "Route to standard model",
-  "premium-model": "Route to premium model",
-  "summarize-first": "Summarize first",
-  "overnight-batch": "Run overnight batch",
-};
+import {
+  RoutingChoiceList,
+  isRevisionChoice,
+  type RoutingChoice,
+} from "./RoutingChoiceList";
 
 interface RoutingPanelProps {
   request: FlaggedRequest;
   onClose: () => void;
   onSelectRoute: (route: RouteOption) => void;
   onSendBack: (option: RevisionOption) => void;
-  /** When false, revision chips are non-interactive (POC / PDF click map) */
+  /** When false, revision radios are non-interactive (POC / PDF click map) */
   revisionActionsEnabled?: boolean;
-  /** Guided POC: only this route chip is clickable; others look normal but ignore input */
+  /** Guided POC: only this route radio is clickable; others look normal but ignore input */
   demoOnlyRouteOption?: RouteOption;
   /** Drawer motion: open = slide up in; closing = slide down out */
   overlayPhase?: "open" | "closing";
@@ -43,6 +29,19 @@ export function RoutingPanel({
   demoOnlyRouteOption,
   overlayPhase = "open",
 }: RoutingPanelProps) {
+  const [pendingChoice, setPendingChoice] = useState<RoutingChoice>(
+    request.selectedRoute,
+  );
+
+  function commitPending() {
+    if (isRevisionChoice(pendingChoice)) {
+      onSendBack(pendingChoice);
+    } else {
+      onSelectRoute(pendingChoice);
+    }
+    onClose();
+  }
+
   return (
     <div
       className={`routing-panel-overlay routing-panel-overlay--${overlayPhase}`}
@@ -77,67 +76,15 @@ export function RoutingPanel({
           </header>
 
           <div className="routing-panel__drawer-body">
-            <section className="routing-panel__drawer-group">
-              <h3 className="routing-panel__drawer-group-title">Routing options</h3>
-              <ul className="routing-chip-list">
-                {ROUTE_OPTIONS.map((opt) => {
-                  const routeLocked =
-                    demoOnlyRouteOption != null && opt !== demoOnlyRouteOption;
-                  return (
-                    <li key={opt}>
-                      <button
-                        type="button"
-                        className={
-                          routeLocked
-                            ? request.selectedRoute === opt
-                              ? "routing-chip routing-chip--selected poc-action-guard"
-                              : "routing-chip poc-action-guard"
-                            : request.selectedRoute === opt
-                              ? "routing-chip routing-chip--selected"
-                              : "routing-chip"
-                        }
-                        aria-disabled={routeLocked || undefined}
-                        tabIndex={routeLocked ? -1 : undefined}
-                        onClick={() => {
-                          if (routeLocked) return;
-                          onSelectRoute(opt);
-                          onClose();
-                        }}
-                      >
-                        {PANEL_ROUTE_LABELS[opt]}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-
-            <section className="routing-panel__drawer-group">
-              <h3 className="routing-panel__drawer-group-title">Request revision</h3>
-              <ul className="routing-chip-list">
-                {REVISION_OPTIONS.map((opt) => (
-                  <li key={opt}>
-                    <button
-                      type="button"
-                      className={
-                        revisionActionsEnabled
-                          ? "routing-chip routing-chip--revision"
-                          : "routing-chip routing-chip--revision poc-action-guard"
-                      }
-                      aria-disabled={!revisionActionsEnabled}
-                      tabIndex={revisionActionsEnabled ? undefined : -1}
-                      onClick={() => {
-                        if (!revisionActionsEnabled) return;
-                        onSendBack(opt);
-                        onClose();
-                      }}
-                    >
-                      {REVISION_LABELS[opt]}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <RoutingChoiceList
+              name="edit-routing"
+              value={pendingChoice}
+              onChange={setPendingChoice}
+              onSave={commitPending}
+              onCancel={onClose}
+              revisionEnabled={revisionActionsEnabled}
+              demoOnlyRouteOption={demoOnlyRouteOption}
+            />
           </div>
         </div>
       </div>

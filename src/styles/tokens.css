@@ -102,6 +102,10 @@
   --routing-chip-radius: 2px;
   --routing-chip-gap: 8px;
   --routing-drawer-section-gap: 16px;
+  --routing-radio-size: 24px;
+  --routing-radio-label-gap: 8px;
+  --routing-radio-row-gap: 12px;
+  --routing-choice-action-gap: 16px;
   --screen1-gap-cards: 32px;
   --screen1-gap-card-inner: 12px;
   --screen1-gap-title-block: 4px;

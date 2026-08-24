@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { PageShell } from "./components/PageShell";
+import { isRevisionChoice } from "./components/RoutingChoiceList";
 import {
   VIEW_TRANSITION_MS,
   salesOpsGuidedDemoComplete,
@@ -50,8 +51,6 @@ function App() {
   const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
   const [screenTransition, setScreenTransition] =
     useState<ScreenTransition | null>(null);
-  const [exitExecutiveBriefingSignal, setExitExecutiveBriefingSignal] =
-    useState(0);
 
   useEffect(() => {
     if (!screenTransition) return;
@@ -92,13 +91,28 @@ function App() {
     setEditingRequestId(null);
   }
 
-  function setRequestRoute(requestId: string, route: RouteOption) {
+  function setRequestRoute(
+    requestId: string,
+    route: RouteOption,
+    options?: { completePremiumReview?: boolean },
+  ) {
     setRequests((prev) =>
       prev.map((r) => {
         if (r.id !== requestId) return r;
         const screen2RouteHeading =
-          route === r.recommendedRoute ? undefined : ("selected" as const);
-        return { ...r, selectedRoute: route, screen2RouteHeading };
+          options?.completePremiumReview ||
+          r.screen2RouteHeading === "selected" ||
+          route !== r.recommendedRoute
+            ? ("selected" as const)
+            : undefined;
+        return {
+          ...r,
+          selectedRoute: route,
+          screen2RouteHeading,
+          requiresPremiumReview: options?.completePremiumReview
+            ? false
+            : r.requiresPremiumReview,
+        };
       }),
     );
   }
@@ -107,7 +121,6 @@ function App() {
     teamId,
     requests,
     editingRequestId,
-    exitExecutiveBriefingSignal,
     onOpenEdit: (id: string) => setEditingRequestId(id),
     onCloseEdit: () => setEditingRequestId(null),
     onSelectRoute: (id: string, route: RouteOption) =>
@@ -171,7 +184,6 @@ function App() {
                 setEditingRequestId(null);
                 if (reset) {
                   setRequests(cloneInitialRequests());
-                  setExitExecutiveBriefingSignal(0);
                 }
               },
             });
@@ -181,7 +193,6 @@ function App() {
             teamId={fp.teamId}
             requests={fp.requests}
             editingRequestId={fp.editingRequestId}
-            exitExecutiveBriefingSignal={fp.exitExecutiveBriefingSignal}
             onOpenEdit={fp.onOpenEdit}
             onCloseEdit={fp.onCloseEdit}
             onSelectRoute={fp.onSelectRoute}
@@ -209,29 +220,27 @@ function App() {
         >
           <PremiumReviewScreen
             request={premiumRequest}
-            revisionActionsEnabled={false}
-            demoOnlyRouteOption="premium-model"
-            onSelectRoute={(route) =>
-              setRequestRoute(premiumRequest.id, route)
-            }
-            onSendBack={(_revision) => {
-              sendBackRequest(premiumRequest.id);
+            onSave={(choice) => {
+              if (isRevisionChoice(choice)) {
+                sendBackRequest(premiumRequest.id);
+              } else {
+                setRequestRoute(premiumRequest.id, choice, {
+                  completePremiumReview: true,
+                });
+              }
               pushTransition({
                 from: n,
                 to: { screen: "flagged", teamId: n.teamId },
                 direction: "back",
+                afterCommit: () => setEditingRequestId(null),
               });
             }}
-            onConfirmPremiumRoute={() => {
-              setRequestRoute(premiumRequest.id, "premium-model");
+            onCancel={() => {
               pushTransition({
                 from: n,
                 to: { screen: "flagged", teamId: n.teamId },
                 direction: "back",
-                afterCommit: () => {
-                  setExitExecutiveBriefingSignal((sig) => sig + 1);
-                  setEditingRequestId(null);
-                },
+                afterCommit: () => setEditingRequestId(null),
               });
             }}
           />
