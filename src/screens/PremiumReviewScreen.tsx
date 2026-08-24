@@ -120,7 +120,10 @@ export function PremiumReviewScreen({
       </section>
 
       <div className="premium-screen__below-fold">
-        <section className="premium-screen__section" aria-labelledby="premium-why-heading">
+        <section
+          className="premium-screen__section premium-screen__section--no-divider"
+          aria-labelledby="premium-why-heading"
+        >
           <h2 id="premium-why-heading" className="premium-screen__section-title">
             Why Flagged
           </h2>
@@ -131,7 +134,10 @@ export function PremiumReviewScreen({
           </div>
         </section>
 
-        <section className="premium-screen__section" aria-labelledby="premium-suggested-heading">
+        <section
+          className="premium-screen__section premium-screen__section--no-divider"
+          aria-labelledby="premium-suggested-heading"
+        >
           <h2 id="premium-suggested-heading" className="premium-screen__section-title">
             Suggested Route
           </h2>
